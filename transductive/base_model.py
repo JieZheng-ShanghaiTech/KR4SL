@@ -111,8 +111,6 @@ class BaseModel(object):
                     rm_list.append(get_rm_set[(subs[i], rels[i])])
 
                 scores = scores.data.cpu().numpy()
-                filters = np.array(filters)
-
                 scores = scores[:, gene_idx]
                 objs = objs[:, gene_idx]                        
                 # ranks = cal_ranks(scores, objs, filters)
