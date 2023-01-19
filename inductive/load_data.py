@@ -3,7 +3,6 @@ import torch
 from scipy.sparse import csr_matrix
 import numpy as np
 from collections import defaultdict
-from transformers import AutoTokenizer, AutoModel
 from operator import itemgetter
 import ipdb
 
@@ -13,7 +12,6 @@ class DataLoader:
         self.ind_dir = task_dir + '_ind'
         self.n_layer = opts.n_layer
         self.hidden_dim = opts.hidden_dim
-        self.constrain_go_depth = opts.constrain_go_depth
 
         with open(os.path.join(task_dir, 'Gene_set.txt')) as f:
             self.gene_set = []
@@ -62,6 +60,7 @@ class DataLoader:
         with open('../data/all_entities.txt') as f:
             for line in f:
                 all_entities.append(line)
+        all_entities = np.array(all_entities)
         bert_path = '../data/all_entities_pretrain_emb.npy'
         print(bert_path)
         all_entities_pretrain_emb_org = np.load(bert_path)
@@ -173,7 +172,7 @@ class DataLoader:
         '''
         triples = []
         genes = list(self.entitypeid2geneid.keys()) if mode == 'transductive' else list(self.entitypeid2geneid_ind.keys())
-        exclude_id1 = self.exclude_id1 if mode=='transductive' else self.exclude_id1_ind
+        # exclude_id1 = self.exclude_id1 if mode=='transductive' else self.exclude_id1_ind
         with open(os.path.join(directory, filename)) as f:
             for line in f:
                 h, r, t = line.strip().split()
@@ -211,7 +210,7 @@ class DataLoader:
     def load_graph(self, triples, mode='transductive'):
         n_ent_org = self.n_ent if mode=='transductive' else self.n_ent_ind
         entity2id = self.entity2id if mode=='transductive' else self.entity2id_ind
-        exclude_id1 = self.exclude_id1 if mode=='transductive' else self.exclude_id1_ind
+        # exclude_id1 = self.exclude_id1 if mode=='transductive' else self.exclude_id1_ind
 
         KG = np.array(triples)
         idd_rel_id = KG[:,1].max() + 1
@@ -264,7 +263,6 @@ class DataLoader:
         sampled_edges = np.concatenate([np.expand_dims(edges[1],1), KG[edges[0]]], axis=1)     # (batch_idx, head, rela, tail)
         
         if last_flag:
-            hidden, h0 = emb
             sampled_edges = sampled_edges[np.isin(sampled_edges[:, -1], gene_idx)]
             
         sampled_edges = torch.LongTensor(sampled_edges).cuda()
@@ -274,8 +272,10 @@ class DataLoader:
         tail_nodes, tail_index = torch.unique(sampled_edges[:,[0,3]], dim=0, sorted=True, return_inverse=True)
         
         if last_flag:
+            hidden, h0 = emb
             hidden = hidden[np.isin(nodes[:,1], head_nodes[:,1].cpu().numpy()),:]
             h0 = h0[:, np.isin(nodes[:,1], tail_nodes[:,1].cpu().numpy()),:]
+            emb = (hidden, h0)
 
         # get 'idd' relation, i.e., head nodes == tail nodes, representing the query nodes
         idd_id = KG[:, 1].max()
@@ -285,7 +285,7 @@ class DataLoader:
 
         sampled_edges = torch.cat([sampled_edges, head_index.unsqueeze(1), tail_index.unsqueeze(1)], 1)
        
-        return tail_nodes, sampled_edges, old_nodes_new_idx, (hidden, h0)
+        return tail_nodes, sampled_edges, old_nodes_new_idx, emb
 
     def get_batch(self, batch_idx, steps=2, data='train'):
         if data=='train':

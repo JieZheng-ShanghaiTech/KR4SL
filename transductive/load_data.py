@@ -3,7 +3,6 @@ import torch
 from scipy.sparse import csr_matrix
 import numpy as np
 from collections import defaultdict
-from utils import compute_kernel_bias, transform_and_normalize
 from operator import itemgetter
 import pandas as pd
 import random
@@ -14,8 +13,6 @@ class DataLoader:
         self.task_dir = task_dir
         self.n_layer = opts.n_layer
         self.hidden_dim = opts.hidden_dim
-        self.constrain_go_depth = opts.constrain_go_depth
-        self.n_samp = opts.n_samp
 
         with open(os.path.join(task_dir, 'Gene_set.txt')) as f:
             self.gene_set = []
@@ -246,18 +243,9 @@ class DataLoader:
             KG = self.tKG
             M_sub = self.tM_sub
         entity2type = self.entity2type
-        def compute_M(data):
-            data = np.array(data)
-            cols = np.arange(data.size)
-            return csr_matrix((cols, (data.ravel(), cols)),
-                            shape=(int(data.max() + 1), data.size))
 
-        def get_indices_sparse(data):
-            M = compute_M(data)
-            return [np.unravel_index(row.data, data.shape) for row in M]
-
-        # nodes: n_node x 2 with (batch_idx, node_idx)
         node_1hot = csr_matrix((np.ones(len(nodes)), (nodes[:,1], nodes[:,0])), shape=(self.n_ent, nodes.shape[0]))
+        edge_1hot = M_sub.dot(node_1hot)
         edges = np.nonzero(edge_1hot)
         sampled_edges = np.concatenate([np.expand_dims(edges[1],1), KG[edges[0]]], axis=1)     # (batch_idx, head, rela, tail)
 
@@ -280,6 +268,7 @@ class DataLoader:
             hidden, h0 = emb
             hidden = hidden[np.isin(nodes[:,1], head_nodes[:,1].cpu().numpy()),:]
             h0 = h0[:, np.isin(nodes[:,1], tail_nodes[:,1].cpu().numpy()),:]
+            emb = (hidden, h0)
         sampled_edges = torch.cat([sampled_edges, head_index.unsqueeze(1), tail_index.unsqueeze(1)], 1)
     
         idd_id = KG[:, 1].max()
@@ -287,7 +276,7 @@ class DataLoader:
         _, old_idx = head_index[mask].sort()
         old_nodes_new_idx = tail_index[mask][old_idx]
 
-        return tail_nodes, sampled_edges, old_nodes_new_idx, (hidden, h0)
+        return tail_nodes, sampled_edges, old_nodes_new_idx, emb
 
     def get_batch(self, batch_idx, steps=2, data='train'):
         if data=='train':

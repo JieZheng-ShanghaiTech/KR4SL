@@ -14,12 +14,7 @@ class GNNLayer(torch.nn.Module):
         self.act = act
 
         self.rela_embed = nn.Embedding(n_rel, in_dim)
-        if combine_by == 'sum':
-            self.W1 = nn.Linear(in_dim, in_dim, bias=False)
-        elif combine_by == 'concat':
-            self.W1 = nn.Linear(3*in_dim, in_dim, bias=False)
-        elif combine_by == 'att' or 'worel':
-            self.W1 = nn.Linear(in_dim, in_dim, bias=False)
+        self.W1 = nn.Linear(in_dim, in_dim, bias=False)
         self.Ws_attn = nn.Linear(in_dim, attn_dim, bias=False)
         self.Wr_attn = nn.Linear(in_dim, attn_dim, bias=False)        
         self.w_alpha  = nn.Linear(attn_dim, 1)
@@ -60,7 +55,7 @@ class RED_GNN_induc(torch.nn.Module):
             self.gnn_layers.append(GNNLayer(self.hidden_dim, self.hidden_dim, self.attn_dim, self.n_rel, act=act))
         self.gnn_layers = nn.ModuleList(self.gnn_layers)
         
-        self.dropout = nn.Dropout(params.dropout)
+        # self.dropout = nn.Dropout(params.dropout)
         self.W_final = nn.Linear(self.hidden_dim, 1, bias=False)         # get score
         self.gate = nn.GRU(self.hidden_dim, self.hidden_dim)
         for m in self.gnn_layers.modules():
@@ -84,7 +79,7 @@ class RED_GNN_induc(torch.nn.Module):
         self.gene_idx = list(self.loader.entitypeid2geneid.keys()) if mode=='transductive' else list(self.loader.entitypeid2geneid_ind.keys())
         entity_pretrain_emb = self.loader.entity_pretrain_emb if mode=='transductive' else self.loader.entity_ind_pretrain_emb
 
-q_sub = torch.LongTensor(subs).cuda()
+        q_sub = torch.LongTensor(subs).cuda()
         nodes = torch.cat([torch.arange(n).unsqueeze(1).cuda(), q_sub.unsqueeze(1)], 1)
 
         h0 = torch.zeros((1, n,self.hidden_dim)).cuda()
@@ -99,22 +94,21 @@ q_sub = torch.LongTensor(subs).cuda()
                 nodes, edges, old_nodes_new_idx, _ = self.loader.get_neighbors(nodes.data.cpu().numpy(), None, mode=mode, last_flag=False)#nodes: neighbors of source nodes   
             else:
                 nodes, edges, old_nodes_new_idx, (hidden,h0) = self.loader.get_neighbors(nodes.data.cpu().numpy(), (hidden,h0), mode=mode, last_flag=True)#nodes: neighbors of source nodes   
-                h_sub = entity_pretrain_emb[edges[:,1]].cuda() + entity_pretrain_emb[edges[:,3]].cuda()
-
+            
+            h_sub = entity_pretrain_emb[edges[:,1]].cuda() + entity_pretrain_emb[edges[:,3]].cuda()
             hidden, alpha = self.gnn_layers[i](q_sub, hidden, edges, nodes.size(0), old_nodes_new_idx, entity_pretrain_emb, h_sub)
             h0 = torch.zeros(1, nodes.size(0), hidden.size(1)).cuda().index_copy_(1, old_nodes_new_idx, h0)
                 
             # hidden = self.dropout(hidden)
-            if self.gru == 1:
-                hidden, h0 = self.gate(hidden.unsqueeze(0), h0)
-                hidden = hidden.squeeze(0)
+            hidden, h0 = self.gate(hidden.unsqueeze(0), h0)
+            hidden = hidden.squeeze(0)
+
             if explain:
                 alpha_all.append(alpha.detach().cpu().numpy())
                 edges_all.append(edges.detach().cpu().numpy())
-            
-        if self.bert == 1:
-            h_sub = entity_pretrain_emb[q_sub[nodes[:,0]]].cuda()
-            hidden = hidden + h_sub
+
+        h_sub = entity_pretrain_emb[q_sub[nodes[:,0]]].cuda()
+        hidden = hidden + h_sub
 
         scores = self.W_final(hidden).squeeze(-1)
         scores_all = torch.zeros((n, self.loader.n_ent)).cuda()
