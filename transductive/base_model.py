@@ -115,20 +115,20 @@ class BaseModel(object):
 
                 scores = scores[:, gene_idx]
                 objs = objs[:, gene_idx]                        
-                ranks = cal_ranks(scores, objs, filters)
-                ranking += ranks
+                # ranks = cal_ranks(scores, objs, filters)
+                # ranking += ranks
                 s_all += scores.tolist()
                 o_all += objs.tolist()
                 f_all += filters.tolist()
                 r_all += rm_list
 
-            ranking = np.array(ranking)
-            mrr, h1, h10 = cal_performance(ranking)
+            # ranking = np.array(ranking)
+            # mrr, h1, h10 = cal_performance(ranking)
             s_all = np.vstack(s_all)
             o_all = np.vstack(o_all)
             f_all = np.vstack(f_all)
             ndcg_10, p_10, r_10, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=10)
             ndcg_20, p_20, r_20, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=20)
             ndcg_50, p_50, r_50, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=50)
-            out_str = '[%s] MRR:%.4f H@1:%.4f H@10:%.4f \nNDCG@10:%.4f NDCG@20:%.4f NDCG@50:%.4f\nP@10:%.4f P@20:%.4f P@50:%.4f\nR@10:%.4f R@20:%.4f R@50:%.4f\n' %(data.upper(), mrr, h1, h10, ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)
-        return ndcg_50, out_str, (mrr, h1, h10, ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)
+            out_str = '[%s] NDCG@10:%.4f NDCG@20:%.4f NDCG@50:%.4f\nP@10:%.4f P@20:%.4f P@50:%.4f\nR@10:%.4f R@20:%.4f R@50:%.4f\n' %(data.upper(), ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)
+        return ndcg_50, out_str, (ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)
