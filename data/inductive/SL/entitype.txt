@@ -1,0 +1,5 @@
+BP 0
+CC 1
+Gene 2
+MF 3
+Pathway 4
