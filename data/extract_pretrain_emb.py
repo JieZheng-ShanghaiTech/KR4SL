@@ -45,4 +45,4 @@ with open('./data/all_entities') as f:
 
 all_entities_emb = get_bert_embed(all_entities, model, tokenizer, max_len=512, normalize=True, summary_method="CLS")
 
-np.save('/home/kezhang/MKSL/data/ontoprotein/ProteinKG25_v1/all_entities_pretrain_emb.npy', all_entities_emb)
+np.save('./all_entities_pretrain_emb.npy', all_entities_emb)
