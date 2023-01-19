@@ -33,4 +33,4 @@ transformers 4.23.1
 ```
 
 ## Acknowledgement
-Partial code is adapted from [Zhang and Yao 2022] (https://arxiv.org/pdf/2108.06040.pdf) with the repository https://github.com/AutoML-Research/RED-GNN.
+Partial code is adapted from [Zhang and Yao 2022](https://arxiv.org/pdf/2108.06040.pdf) with the repository https://github.com/AutoML-Research/RED-GNN.
