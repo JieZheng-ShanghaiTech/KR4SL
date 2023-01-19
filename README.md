@@ -8,15 +8,20 @@ We have provided the processed dataset. The SL gene pairs we used are derived fr
 To utilize the pre-trained textual embedding, one can take `all_entities.txt` in data folder as the input and use the pre-trained BERT model named [CODER](https://github.com/GanjinZero/CODER) to get textual embeddings for each entity.
 
 ## Running
+Extract textual embeddings
+```
+python extract_pretrain_emb.py
+```
+
 For transductive reasoning
 ```
 cd transductive
-python -W ignore train.py --time_num 0 --suffix trans_reason --gpu 0 --batch_size 50 --n_layer 3
+python -W ignore train.py --suffix trans_reason
 ```
 For inductive reasoning
 ```
 cd inductive
-python -W ignore train.py --time_num 0 --suffix ind_reason --gpu 0 --batch_size 50 --n_layer 3
+python -W ignore train.py --suffix ind_reason
 ```
 
 ## Requirements
@@ -24,6 +29,7 @@ python -W ignore train.py --time_num 0 --suffix ind_reason --gpu 0 --batch_size 
 python36
 torch 1.11.0
 torch scatter 2.0.9
+transformers 4.23.1
 ```
 
 ## Acknowledgement
