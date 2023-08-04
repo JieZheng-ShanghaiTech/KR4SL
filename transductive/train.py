@@ -19,7 +19,7 @@ def get_params():
     parser.add_argument('--attn_dim', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--explain', default=False)
-    parser.add_argument('--suffix', type=str, default='')
+    parser.add_argument('--suffix', type=str, default='trans')
     parser.add_argument('--time_num', type=int, default=0)
     # parser.add_argument('--constrain_go_depth', type=int, default=0, help='whether remove the GO term at shallow level of GO tree, 0: not remove, 1: remove by exclude_set1)  
     
