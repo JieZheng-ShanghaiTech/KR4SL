@@ -111,7 +111,7 @@ if __name__ == '__main__':
         torch.save(model.model.state_dict(), opts.ckpt_file)
         if (epoch + 1) % 3 == 0:
             i_time = time.time()
-            train_mrr, out_str_tr, result_tr = model.evaluate(data='train')
+            train_n50, out_str_tr, result_tr = model.evaluate(data='train')
             val_n50, out_str_val, result_val = model.evaluate(data='valid')
             tst_n50, out_str_tst, result_tst = model.evaluate(data='test')
             i_time = time.time() - i_time

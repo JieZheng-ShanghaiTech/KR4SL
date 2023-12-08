@@ -97,7 +97,6 @@ class BaseModel(object):
         self.model.eval()
         with torch.no_grad():
             n_batch = n_data // batch_size + (n_data % batch_size > 0)
-            n_batch = 1
             for i in range(n_batch):
                 start = i*batch_size
                 end = min(n_data, (i+1)*batch_size)
@@ -117,16 +116,16 @@ class BaseModel(object):
                 # ranking += ranks
                 s_all += scores.tolist()
                 o_all += objs.tolist()
-                f_all += filters.tolist()
+                # f_all += filters.tolist()
                 r_all += rm_list
 
             # ranking = np.array(ranking)
             # mrr, h1, h10 = cal_performance(ranking)
             s_all = np.vstack(s_all)
             o_all = np.vstack(o_all)
-            f_all = np.vstack(f_all)
-            ndcg_10, p_10, r_10, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=10)
-            ndcg_20, p_20, r_20, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=20)
-            ndcg_50, p_50, r_50, _ = cal_ndcg(s_all, o_all, f_all, r_all, n=50)
+            # f_all = np.vstack(f_all)
+            ndcg_10, p_10, r_10, _ = cal_ndcg(s_all, o_all, r_all, n=10)
+            ndcg_20, p_20, r_20, _ = cal_ndcg(s_all, o_all, r_all, n=20)
+            ndcg_50, p_50, r_50, _ = cal_ndcg(s_all, o_all, r_all, n=50)
             out_str = '[%s] NDCG@10:%.4f NDCG@20:%.4f NDCG@50:%.4f\nP@10:%.4f P@20:%.4f P@50:%.4f\nR@10:%.4f R@20:%.4f R@50:%.4f\n' %(data.upper(), ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)
         return ndcg_50, out_str, (ndcg_10, ndcg_20, ndcg_50, p_10, p_20, p_50, r_10, r_20, r_50)

@@ -249,10 +249,9 @@ class DataLoader:
         edges = np.nonzero(edge_1hot)
         sampled_edges = np.concatenate([np.expand_dims(edges[1],1), KG[edges[0]]], axis=1)     # (batch_idx, head, rela, tail)
 
-        sampled_edges = np.concatenate([np.expand_dims(edges[1],1), KG[edges[0]]], axis=1)     # (batch_idx, head, rela, tail)
-        idd_id = KG[:,1].max()
-        idd_edges = np.hstack((nodes, int(idd_id)*np.ones((len(nodes), 1)), nodes[:,[1]]))
-        sampled_edges = np.unique(np.vstack((sampled_edges, idd_edges)),axis=0)
+        # idd_id = KG[:,1].max()
+        # idd_edges = np.hstack((nodes, int(idd_id)*np.ones((len(nodes), 1)), nodes[:,[1]]))
+        # sampled_edges = np.unique(np.vstack((sampled_edges, idd_edges)),axis=0)
         
         if last_flag:
             sampled_edges = sampled_edges[np.isin(sampled_edges[:, -1], list(self.entitypeid2geneid.keys()))]

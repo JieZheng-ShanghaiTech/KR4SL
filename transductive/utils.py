@@ -25,14 +25,13 @@ def cal_dcg(rel):
     return dcg
 
 
-def cal_ndcg(scores, labels, filters, rm_list, n=10):
+def cal_ndcg(scores, labels, rm_list, n=10):
     # ndcg topk
     denom = np.log2(np.arange(2, n + 2))
     ndcgs = []
     p_topks = []
     r_topks = []
     hit_topks = []
-    import ipdb
     for i in range(len(scores)):
         scores_i = scores[i]
         sorted_list = np.argsort(scores_i, axis=0, kind='stable')[::-1]
